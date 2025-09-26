@@ -1,0 +1,140 @@
+此APi接口文档主要用于客户端调用，在无盘环境下顾客重启电脑过后还可以恢复存档。与着色器，并提供个人盘功能
+
+一、/UserData/  用于用户存档的管理
+
+1.拉取用户存档清单,返回原始清单数据 stream/fileslist
+/UserData/UserSaveList?uid=10
+
+2.上传用户存档文件, Post 文件原始数据
+记得path要url编码,post数据大小=size参数并限制200MB
+/UserData/UploadUserSave?uid=10&rid=666666&attr=32&size=4587&hash=0b0bd88b6b2901c047b8c223ae5c51236c2f79f1&path=D$\aaa.txt
+
+3.上传用户存档当时的应用截图, Post jpg 文件原始数据
+post数据大小=size参数并限制1MB
+/UserData/UploadSavePic?uid=10&rid=666666&size=79554
+
+4.删除用户存档中的文件, Post json
+/UserData/DeleteFiles?uid=10&rid=666666
+{"files":["D$\aaa.txt","%VDisk"\bb.temp]}
+
+
+二、/NvCache/	用于保存着色器文件
+
+客户端程序的执行流程，
+1.初始化 时拉取清单  stream/fileslist ，
+2.建立软链，监控文件变动，
+3.检查变动的文件是否需要上传，
+4.上传需要的文件，上传清单
+
+1.拉取清单列表,返回原始清单数据 stream/fileslist
+seat：机器唯一标记（计算机名）
+name：显卡唯一标记（显卡名字+启动版本号）
+/NvCache/list?seat=A010&name=dafu
+
+返回 {"code":2,"msg":"Not Found"}
+
+
+
+2.上传文件前检查是否需要上传, Post json 返回需要上传的文件的hash
+/NvCache/check_files?size=784512
+请求：
+[
+{"hash":"0b0bd88b6b2901c047b8c223ae5c51236c2f79f1"},
+{"hash":"040bd88b6b2901c047b8c223ae5c51236c2f7134"},
+{"hash":"784bd88b6b2901c047b8c223ae5c51236c2f7842"}
+]
+响应：
+{
+	"code": 0,
+	"msg": "ok",
+	"files": [
+		{"hash":"0b0bd88b6b2901c047b8c223ae5c51236c2f79f1"},
+		{"hash":"040bd88b6b2901c047b8c223ae5c51236c2f7134"},
+	]
+}
+
+3.上传着色器文件, Post 文件原始数据
+post数据大小=size参数并限制200MB
+/NvCache/upload_file?size=4587&hash=0b0bd88b6b2901c047b8c223ae5c51236c2f79f1
+
+4.上传清单,确保先上传完文件后再上传清单 Post json
+/NvCache/upload_list?name=asfdfdf6542==&size=7852
+[
+{
+"add":{//有则修改，无则添加
+	"hash":"0b0bd88b6b2901c047b8c223ae5c51236c2f79f1",
+	"path":"169b93206d78c61b7d90892adcd03e0c_fce8395c8fd8a998_0d2b2727c053afe8_0_0.0.bin",
+	"size":4874612,
+	"attr":32,
+	"time":13345788111235454
+}
+},
+
+{"del":{"name":"169b93206d78c61b7d90892adcd03e0c_fce8395c8fd8a998_0d2b2727c053afe8_0_0.0.toc"}}
+]
+
+
+三、/UserDisk/  用于个人盘的功能
+
+执行流程，初始化时拉取清单，监控文件变动，接收explorer和sendto发来的文件复制消息, 检查变动的文件是否需要上传，上传需要的文件，上传清单
+ 
+1.拉取清单,返回原始清单数据 stream/fileslist
+/UserDisk/list?uid=1108494&doc=1
+
+2.上传文件前检查是否需要上传, Post json 返回需要上传的文件的hash
+/UserDisk/check_files?size=784512&deep=1&steam=1
+参数：	steam表示是否检查steam文件存在
+		deep 表示是否检查数据中心
+请求：
+[
+{"hash":"0b0bd88b6b2901c047b8c223ae5c51236c2f79f1"},
+{"hash":"040bd88b6b2901c047b8c223ae5c51236c2f7134"},
+{"hash":"784bd88b6b2901c047b8c223ae5c51236c2f7842"}
+]
+响应：
+{
+	"code": 0,
+	"msg": "ok",
+	"files": [
+		{"hash":"0b0bd88b6b2901c047b8c223ae5c51236c2f79f1"},
+		{"hash":"040bd88b6b2901c047b8c223ae5c51236c2f7134"},
+	]
+}
+
+3.上传用户文件, Post 文件原始数据
+post数据大小=size参数并限制200MB
+/UserDisk/upload_file?size=4587&hash=0b0bd88b6b2901c047b8c223ae5c51236c2f79f1
+
+4.上传清单,确保先上传完文件后再上传清单 Post json
+/UserDisk/upload_list?uid=1108494&size=261
+[
+{
+"add":{//有则修改，无则添加
+	"hash":"0b0bd88b6b2901c047b8c223ae5c51236c2f79f1",
+	"path":"aaa.txt",
+	"size":4874612,
+	"attr":32,
+	"time":13345788111235454
+}
+},
+
+{"del":{"name":"ddd.txt"}},
+{"ren":{"aaaa\\bbb\\cc\\dd.txt":"aaaa\\bbb\\cc\\ddd.txt"}},  // dd.txt -> ddd.txt
+{"del":{"name":"aaaa\\bbb\\cc"}},
+{"ren":{"aaaa\\bbb":"aaaa\\bbbbbb"}},
+
+
+{
+"add":{"hash":"040bd88b6b2901c047b8c223ae5c51236c2f79f2",
+"path":"bbb.txt",
+"size":4874612,
+"attr":32}
+}
+] 
+
+
+go test ./...
+go run ./cmd/userdiskapitester -base-url http://127.0.0.1:8080 -uid 1108494
+
+
+ 

@@ -1,0 +1,361 @@
+此API 文档主要用于web端
+
+以下所有HTTP接口都需要在HEADER上加Authorization
+
+// 获取存档列表
+/UserSave/list?uid=123
+
+{
+	"code": 0,
+	"msg": "ok",
+	"data": [
+		{
+			"uid": "123",
+			"rid": "6",
+			"ver": 123456,
+			"rec_time": 123456,
+			"size": 123456
+			"path": ""
+		},
+		{
+			"uid": "123",
+			"rid": "7",
+			"ver": 123456,
+			"rec_time": 123456,
+			"size": 123456
+		}
+	]
+}
+
+// 获取指定游戏的历史存档
+/UserSave/history?uid=123&rid=666&show_files=1
+
+{
+	"code": 0,
+	"msg": "ok",
+	"data": [
+		{
+			"id": 1,
+			"uid": "123",
+			"rid": 666,
+			"ver": 123456,
+			"rec_time": 123456,
+			"name": "无限材料",
+			"size": 123456,
+			"capture": "",
+			"comment": "备注",
+			"add": "",
+			"files": [
+				{
+					"file": "bin\\save1.txt",
+					"size": 321,
+					"time": 123456789
+				},
+				{
+					"file": "bin\\save1.txt",
+					"size": 321,
+					"time": 123456789
+				}
+			]
+		},
+		{
+			"id": 2,
+			"uid": "123",
+			"rid": 666,
+			"ver": 123456,
+			"rec_time": 123456,
+			"name": "全图",
+			"size": 123456,
+			"capture": "",
+			"comment": "备注",
+			"add": "",
+			"files": [
+				{
+					"file": "bin\\save1.txt",
+					"size": 321,
+					"time": 123456789
+				},
+				{
+					"file": "bin\\save1.txt",
+					"size": 321,
+					"time": 123456789
+				}
+			]
+		}
+	]
+}
+
+// 删除历史记录
+/UserSave/delete?uid=123&id=1
+
+{
+	"code": 0,
+	"msg": "ok"
+}
+
+// 修改历史存档名称
+/UserSave/name?uid=123&id=1&name=全载具收藏
+
+{
+	"code": 0,
+	"msg": "ok"
+}
+
+// 共享指定存档
+// sid=0时上传新的存档，sid不为0时，覆盖指定存档
+/UserSave/share?uid=123&id=1&sid=0&token=eyfdsafasfdsfds
+body:{
+	"name":"",
+	"comment":"",
+	"add":""
+}
+
+{
+	"code":0,
+	"msg":"ok",
+	"data":{
+		"task_id":"fdsafdsafdsaa"
+	}
+}
+
+// 查询共享结果 
+/UserSave/shareTask?task_id=fdsafdsafdsaa
+{
+	"code":0,
+	"msg":"ok",
+	"data":[
+		{
+			"task_id": "fdsafdsafdsaa",
+			"status": 3, //0.队列中 1.上传中 2.完成 3.错误
+			"err": "该存档不存在",
+			"db_id": 1,
+			"uid": 123,
+			"rid": 7,
+			"ver": 123456789,
+			"rec_time": 123456789,
+			"name": "存档名称",
+			"size": "存档大小",
+			"capture": "",
+			"comment": "备注",
+			"add":"",
+			"uploaded": 1234456,
+			"files": 123,
+			"files_uploaded": 120
+		}
+	]
+}
+
+// 同步/切换存档
+// sid不为空时，表示同步云端存档，token不能为空
+// id不为空时，表示切换本地存档，token为空
+/UserSave/use?uid=123&token=eyfdsafasdfdsa&sid=123&id=321
+{
+	"code":0,
+	"msg":"ok"
+	"data":{
+		"task_id":"123"
+	}
+}
+
+// 查询同步存档结果
+/UserSave/useTask?task_id=fdsafdsafdsaa
+{
+	"code":0,
+	"msg":"ok",
+	"data":[
+		{
+			"task_id": "fdsafdsafdsaa",
+			"status": 3, //0.队列中 1.上传中 2.完成 3.错误
+			"err": "该共享不存在",
+			"id": 1,
+			"uid": 123
+		}
+	]
+}
+
+// 客户机上重载当前存档
+// 通过WS通道发送以下消息给UserDoc
+{
+	"action":"RemountUserSave",
+	"data":{
+		"id": 123, // 自定义一个数字ID，回复时会将此ID带上
+		"uid": 123456
+	}
+}
+
+
+// 查询当前共享列表
+// rid 为0则查询所有应用的共享
+// uid 查询指定uid的共享
+// own 为1的时候，必须提供token，查询自己的共享, 无需提供uid
+/UserSave/server/UserSave/share_list?own=1&uid=123
+
+{
+	"code":0,
+	"msg":"ok",
+	"data":[
+		{
+			"id":1,
+			"uid":"165459",
+			"nickname":"JJD",
+			"ver":1730087565752,
+			"rec_time":1730087565752,
+			"size":922,
+			"name":"",
+			"rid":7,
+			"comment":"",
+			"add":"0",
+			"capture":"0",
+			"edit_time":1730098272967,
+			"modify":0,
+			"likes":0,
+			"dislikes":0,
+			"downloads":0
+		}
+	]
+}
+
+// 删除共享
+/UserSave/server/UserSave/share_delete?uid=123&token=eyfdsafdsa&shared_id=123
+
+{
+	"code":0,
+	"msg":"ok"
+}
+
+// 启用/取消共享
+// cancle 为1 取消共享，其他或者为空则启用
+/UserSave/server/UserSave/share_cancel?uid=123&token=eyfdsafdsa&shared_id=123&cancle=1
+
+{
+	"code":0,
+	"msg":"ok"
+}
+
+// 点赞 加上cancel=1表示取消点赞
+/UserSave/server/UserSave/share_like?uid=123&token=eyfdsafdsa&shared_id=123
+{
+	"code":0,
+	"msg":"ok"
+}
+
+// 点踩 加上cancel=1表示取消点踩
+/UserSave/server/UserSave/share_dislike?uid=123&token=eyfdsafdsa&shared_id=123
+{
+	"code":0,
+	"msg":"ok"
+}
+
+
+// 查询当前存档信息 未指定应用名则查询该用户所有存档信息
+/UserSave/SaveInfo?rid=7
+{
+	"code": 0,
+	"data": {
+		"lastVersion": {
+			"Notepad++": {
+				"version": 123456789,
+				"total_size": 123,
+				"total_files": 321,
+				"files": [
+					{
+						"file": "bin\\save.txt",
+						"size": 123,
+						"time": 123456789
+					},
+					{
+						"file": "bin\\save1.txt",
+						"size": 321,
+						"time": 123456789
+					}
+				]
+			},
+			"mspaint": {
+				"...": "..."
+			}
+		},
+		"history": {
+			"versions": {
+				"侠盗猎车手5：GTA5钢铁侠": [
+                    {
+                        "id": 252,
+                        "ver": 1740041324009,
+                        "size": 412905
+                    },
+                    {
+                        "id": 241,
+                        "ver": 1740039127880,
+                        "size": 275270
+                    }
+                ],
+                "文件校验工具": [
+                    {
+                        "id": 253,
+                        "ver": 1740041324009,
+                        "size": 9
+                    },
+                    {
+                        "id": 242,
+                        "ver": 1740039127880,
+                        "size": 9
+                    }
+                ]
+			},
+			"total_versions": 321,
+			"total_files": 321
+		},
+		"unsaved": {
+			"files": {
+				"Notepad++": [
+					{
+						"file": "bin\\save1.txt",
+						"size": 321,
+						"time": 123456789
+					},
+					{
+						"file": "bin\\save1.txt",
+						"size": 321,
+						"time": 123456789
+					}
+				]
+			},
+			"total_size": 123,
+			"total_files": 321
+		}
+	}
+}
+
+
+// 保存当前存档 不指定rid则保存所有应用的存档
+/UserSave/save?rid=7
+{
+	"code":0,
+	"msg":"ok"
+	"data":{
+		"task_id":"123"
+	}
+}
+
+// 放弃当前存档 不指定rid则放弃所有应用的未保存的存档
+/UserSave/unsave?rid=7
+{
+	"code":0,
+	"msg":"ok"
+	"data":{
+		"task_id":"123"
+	}
+}
+
+// 查询同步存档结果
+/UserSave/saveTask?task_id=fdsafdsafdsaa
+{
+	"code":0,
+	"msg":"ok",
+	"data":[
+		{
+			"task_id": "fdsafdsafdsaa",
+			"status": 3, //0.队列中 1.操作中 2.完成 3.错误
+			"err": "未能完成操作"
+		}
+	]
+}
