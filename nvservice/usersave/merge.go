@@ -10,12 +10,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strconv"
 	"strings"
-
-	"golang.org/x/sys/windows"
 
 	"saveserver/nvservice/storage"
 )
@@ -298,21 +295,6 @@ func (s *Service) convertToEntry(path, rel, baseTemp, archiveRoot string, ridFil
 		attr:     attr,
 	}
 	return entry, ridVal, nil
-}
-
-func fileAttributes(path string) (uint32, error) {
-	if runtime.GOOS != "windows" {
-		return 0x20, nil
-	}
-	ptr, err := windows.UTF16PtrFromString(path)
-	if err != nil {
-		return 0, err
-	}
-	attrs, err := windows.GetFileAttributes(ptr)
-	if err != nil {
-		return 0, err
-	}
-	return uint32(attrs), nil
 }
 
 func hashFileSHA1(path string) (string, error) {

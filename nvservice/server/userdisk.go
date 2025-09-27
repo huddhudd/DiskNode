@@ -188,12 +188,15 @@ func (s *Server) handleUserDiskList(w http.ResponseWriter, r *http.Request) {
 
 	data, err := os.ReadFile(listPath)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"code": 2, "msg": "Not Found"})
-			return
+		if !errors.Is(err, os.ErrNotExist) {
+			log.Printf("read user disk list %s: %v", listPath, err)
 		}
-		log.Printf("read user disk list %s: %v", listPath, err)
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"code": 5, "msg": "read error"})
+		writeJSON(w, http.StatusNotFound, map[string]any{"code": 2, "msg": "Not Found"})
+		return
+	}
+	if len(data) == 0 {
+		w.Header().Set("Content-Type", "stream/fileslist")
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
@@ -333,19 +336,27 @@ func (s *Server) handleUserDiskCheckFiles(w http.ResponseWriter, r *http.Request
 	sizeParam := strings.TrimSpace(r.URL.Query().Get("size"))
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"code": 1, "msg": "Bad Request"})
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"code": 1, "msg": "Bad Request"})
 		return
 	}
-	if sizeParam != "" {
-		if expected, err := parseUint(sizeParam); err != nil || expected != uint64(len(body)) {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"code": 2, "msg": "invalid data len"})
-			return
-		}
+	if len(body) == 0 {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"code": 1, "msg": "Bad Request"})
+		return
+	}
+	if sizeParam == "" {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"code": 2, "msg": "invalid data len"})
+		return
+	}
+	expected, err := parseUint(sizeParam)
+	if err != nil || expected == 0 || expected != uint64(len(body)) {
+		log.Printf("user disk check_files invalid size got=%d want=%d", len(body), expected)
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"code": 2, "msg": "invalid data len"})
+		return
 	}
 
 	requests, err := parseHashRequests(body)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"code": 4, "msg": "Bad Request"})
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"code": 4, "msg": "Bad Request"})
 		return
 	}
 
