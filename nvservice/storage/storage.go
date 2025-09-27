@@ -13,8 +13,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"golang.org/x/sys/windows"
 )
 
 type hashArea int
@@ -500,16 +498,4 @@ func makeTempPath(base string) (string, error) {
 		return "", fmt.Errorf("generate temp suffix: %w", err)
 	}
 	return base + "." + hex.EncodeToString(buf) + ".tmp", nil
-}
-
-func freeBytes(path string) (free uint64, total uint64, err error) {
-	p, err := windows.UTF16PtrFromString(path)
-	if err != nil {
-		return 0, 0, err
-	}
-	var available, totalBytes, totalFree uint64
-	if err := windows.GetDiskFreeSpaceEx(p, &available, &totalBytes, &totalFree); err != nil {
-		return 0, 0, err
-	}
-	return available, totalBytes, nil
 }
