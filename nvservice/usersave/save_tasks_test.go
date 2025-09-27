@@ -162,6 +162,40 @@ func TestRunUseTaskWithShareDownloader(t *testing.T) {
 	if name != "shared" {
 		t.Fatalf("unexpected history name %q", name)
 	}
+	if status.UseID != 0 {
+		t.Fatalf("expected UseID to remain 0 for share use, got %+v", status)
+	}
+	if status.ShareID != 555 {
+		t.Fatalf("expected ShareID 555, got %+v", status)
+	}
+	if status.HistoryID == 0 {
+		t.Fatalf("expected non-zero history id after share use: %+v", status)
+	}
+
+	taskID2, reused, err := svc.StartUse(uid, 0, 555, "token2")
+	if err != nil {
+		t.Fatalf("restart share use: %v", err)
+	}
+	if !reused {
+		t.Fatalf("expected task reuse on second start")
+	}
+	if taskID2 != taskID {
+		t.Fatalf("task id changed across reuse: %q vs %q", taskID2, taskID)
+	}
+
+	status2 := waitForTaskStatus(t, func() []TaskStatus { return svc.UseTaskStatuses(uid, taskID2) })
+	if status2.Status != taskStatusSuccess {
+		t.Fatalf("unexpected status after reuse: %+v", status2)
+	}
+	if status2.UseID != 0 {
+		t.Fatalf("expected UseID to remain 0 after reuse: %+v", status2)
+	}
+	if status2.ShareID != 555 {
+		t.Fatalf("expected ShareID to remain 555: %+v", status2)
+	}
+	if status2.HistoryID == 0 {
+		t.Fatalf("expected non-zero history id after reuse: %+v", status2)
+	}
 }
 
 type recordingShareClient struct {

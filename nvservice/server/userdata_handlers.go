@@ -33,7 +33,7 @@ func (s *Server) handleUserData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch {
-	case strings.EqualFold(rel, "uploadSave"):
+	case strings.EqualFold(rel, "uploadSave"), strings.EqualFold(rel, "uploadUserSave"):
 		s.handleUserDataUploadSave(w, r)
 	case strings.EqualFold(rel, "deleteFiles"):
 		s.handleUserDataDeleteFiles(w, r)

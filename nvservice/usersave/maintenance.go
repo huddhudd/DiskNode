@@ -42,12 +42,8 @@ func (s *Service) ProcessLostFile(ctx context.Context, hash string) (int64, map[
 			return err
 		}
 
-		res, err := tx.ExecContext(ctx, `DELETE FROM files WHERE hash=?`, hash)
-		if err != nil {
+		if _, err := tx.ExecContext(ctx, `DELETE FROM files WHERE hash=?`, hash); err != nil {
 			return err
-		}
-		if res != nil {
-			deleted, _ = res.RowsAffected()
 		}
 		return nil
 	}); err != nil {

@@ -319,8 +319,8 @@ func TestUserDataLostFileByHash(t *testing.T) {
 	if payload.Code != 0 {
 		t.Fatalf("unexpected payload: %+v", payload)
 	}
-	if payload.Data["deldb"] == 0 {
-		t.Fatalf("expected deletion count")
+	if payload.Data["deldb"] != 0 {
+		t.Fatalf("expected deldb status 0, got %d", payload.Data["deldb"])
 	}
 	if _, ok := payload.Data[strconv.FormatUint(uint64(uid), 10)]; !ok {
 		t.Fatalf("missing uid result")

@@ -11,7 +11,9 @@ import (
 )
 
 var (
-	errHistoryNotFound = errors.New("history record not found")
+	errHistoryNotFound    = errors.New("history record not found")
+	errDeleteHistoryRow   = errors.New("delete history row")
+	errDeleteHistoryFiles = errors.New("delete history files")
 )
 
 func (s *Service) DeleteHistoryRecord(ctx context.Context, uid uint32, id int64) (uint32, int64, error) {
@@ -32,10 +34,10 @@ func (s *Service) DeleteHistoryRecord(ctx context.Context, uid uint32, id int64)
 		}
 
 		if _, err := tx.ExecContext(ctx, `DELETE FROM history WHERE uid=? AND id=?`, uid, id); err != nil {
-			return err
+			return fmt.Errorf("%w: %w", errDeleteHistoryRow, err)
 		}
 		if _, err := tx.ExecContext(ctx, `DELETE FROM files WHERE uid=? AND rid=? AND ver=?`, uid, rid, ver); err != nil {
-			return err
+			return fmt.Errorf("%w: %w", errDeleteHistoryFiles, err)
 		}
 		return nil
 	})
@@ -76,4 +78,12 @@ func (s *Service) RenameHistoryRecord(ctx context.Context, uid uint32, id int64,
 
 func (s *Service) ErrHistoryNotFound() error {
 	return errHistoryNotFound
+}
+
+func (s *Service) ErrDeleteHistoryRow() error {
+	return errDeleteHistoryRow
+}
+
+func (s *Service) ErrDeleteHistoryFiles() error {
+	return errDeleteHistoryFiles
 }

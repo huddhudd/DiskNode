@@ -69,7 +69,6 @@ func New(ctx context.Context, baseDir string, store *nvfiles.Store, dataFactory 
 		storage:     dataFactory,
 		now:         time.Now,
 	}
-	svc.shareClient = NoopShareClient{}
 	svc.shareDownloader = nil
 
 	if err := svc.initDatabase(ctx); err != nil {
@@ -155,16 +154,10 @@ func (s *Service) UserListFilePath(uid uint32) string {
 	return s.userListPath(uid)
 }
 func (s *Service) SetShareClient(client ShareClient) {
-	if client == nil {
-		client = NoopShareClient{}
-	}
 	s.shareClient = client
 }
 
 func (s *Service) ShareClient() ShareClient {
-	if s.shareClient == nil {
-		return NoopShareClient{}
-	}
 	return s.shareClient
 }
 

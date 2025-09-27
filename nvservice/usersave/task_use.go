@@ -34,7 +34,6 @@ func (s *Service) runUseTask(t *task) (int, string) {
 		if err != nil {
 			return taskStatusFailed, taskMessage(err, "拉取存档失败，请稍候再试！0x1")
 		}
-		t.UseID = historyID
 		t.HistoryID = historyID
 		if err := s.useHistory(ctx, t.UID, historyID); err != nil {
 			return taskStatusFailed, taskMessage(err, "拉取存档失败，请稍候再试！0x6")

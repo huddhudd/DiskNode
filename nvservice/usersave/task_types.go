@@ -85,9 +85,3 @@ type DownloadShareFile struct {
 	Creation int64
 	RecTime  int64
 }
-
-type NoopShareClient struct{}
-
-func (NoopShareClient) Share(ctx context.Context, req *ShareRequest) error {
-	return nil
-}

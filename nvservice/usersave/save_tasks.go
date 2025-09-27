@@ -82,6 +82,10 @@ var (
 	errTaskAlreadyPending = errors.New("task already pending")
 )
 
+func IsTaskAlreadyPending(err error) bool {
+	return errors.Is(err, errTaskAlreadyPending)
+}
+
 type taskOptions struct {
 	RID       uint32
 	UseID     int64

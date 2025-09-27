@@ -32,6 +32,52 @@ type queueDel struct {
 	Name string `json:"name"`
 }
 
+func (a *queueAdd) UnmarshalJSON(data []byte) error {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	*a = queueAdd{}
+
+	for key, value := range raw {
+		switch key {
+		case "hash":
+			str, err := parseJSONFlexibleString(value)
+			if err != nil {
+				return err
+			}
+			a.Hash = str
+		case "path":
+			str, err := parseJSONFlexibleString(value)
+			if err != nil {
+				return err
+			}
+			a.Path = str
+		case "size":
+			val, err := parseJSONInt64(value)
+			if err != nil {
+				return err
+			}
+			a.Size = val
+		case "attr":
+			val, err := parseJSONUint32(value)
+			if err != nil {
+				return err
+			}
+			a.Attr = val
+		case "time":
+			val, err := parseJSONInt64(value)
+			if err != nil {
+				return err
+			}
+			a.Time = val
+		}
+	}
+
+	return nil
+}
+
 func (s *Server) processQueue(ctx context.Context, listPath, queuePath, listName string) (*listdata.File, error) {
 	data, err := os.ReadFile(queuePath)
 	if err != nil {

@@ -46,6 +46,107 @@ type userDiskDelete struct {
 	Name string `json:"name"`
 }
 
+const maxUint32Value = int64((1 << 32) - 1)
+
+func (a *userDiskAdd) UnmarshalJSON(data []byte) error {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	*a = userDiskAdd{}
+
+	for key, value := range raw {
+		switch key {
+		case "hash":
+			str, err := parseJSONFlexibleString(value)
+			if err != nil {
+				return err
+			}
+			a.Hash = str
+		case "path":
+			str, err := parseJSONFlexibleString(value)
+			if err != nil {
+				return err
+			}
+			a.Path = str
+		case "size":
+			val, err := parseJSONInt64(value)
+			if err != nil {
+				return err
+			}
+			a.Size = val
+		case "attr":
+			val, err := parseJSONUint32(value)
+			if err != nil {
+				return err
+			}
+			a.Attr = val
+		case "time":
+			val, err := parseJSONInt64(value)
+			if err != nil {
+				return err
+			}
+			a.Time = val
+		}
+	}
+
+	return nil
+}
+
+func parseJSONFlexibleString(data json.RawMessage) (string, error) {
+	var s string
+	if err := json.Unmarshal(data, &s); err == nil {
+		return s, nil
+	}
+	trimmed := strings.TrimSpace(string(data))
+	if trimmed == "" || strings.EqualFold(trimmed, "null") {
+		return "", nil
+	}
+	if strings.HasPrefix(trimmed, "\"") && strings.HasSuffix(trimmed, "\"") && len(trimmed) >= 2 {
+		return trimmed[1 : len(trimmed)-1], nil
+	}
+	if trimmed[0] == '{' || trimmed[0] == '[' {
+		return "", fmt.Errorf("invalid string value %s", trimmed)
+	}
+	return trimmed, nil
+}
+
+func parseJSONInt64(data json.RawMessage) (int64, error) {
+	trimmed := strings.TrimSpace(string(data))
+	if trimmed == "" || strings.EqualFold(trimmed, "null") {
+		return 0, nil
+	}
+	if strings.HasPrefix(trimmed, "\"") && strings.HasSuffix(trimmed, "\"") && len(trimmed) >= 2 {
+		trimmed = strings.TrimSpace(trimmed[1 : len(trimmed)-1])
+	}
+	if trimmed == "" {
+		return 0, nil
+	}
+	if strings.HasPrefix(trimmed, "+") {
+		trimmed = trimmed[1:]
+	}
+	if val, err := strconv.ParseInt(trimmed, 10, 64); err == nil {
+		return val, nil
+	}
+	floatVal, err := strconv.ParseFloat(trimmed, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid int64 value %q", trimmed)
+	}
+	return int64(floatVal), nil
+}
+
+func parseJSONUint32(data json.RawMessage) (uint32, error) {
+	val, err := parseJSONInt64(data)
+	if err != nil {
+		return 0, err
+	}
+	if val < 0 || val > maxUint32Value {
+		return 0, fmt.Errorf("value out of range for uint32: %d", val)
+	}
+	return uint32(val), nil
+}
+
 type hashRequest struct {
 	Hash string `json:"hash"`
 }

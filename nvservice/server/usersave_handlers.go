@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"path"
+	"saveserver/nvservice/usersave"
 	"strconv"
 	"strings"
 	"time"
@@ -312,6 +313,10 @@ func (s *Server) handleUserSaveDelete(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, s.userSave.ErrHistoryNotFound()):
 			writeJSON(w, http.StatusOK, map[string]any{"code": 4, "msg": "\u8be5\u5b58\u6863\u4e0d\u5b58\u5728!"})
+		case errors.Is(err, s.userSave.ErrDeleteHistoryRow()):
+			writeJSON(w, http.StatusOK, map[string]any{"code": 6, "msg": "db error"})
+		case errors.Is(err, s.userSave.ErrDeleteHistoryFiles()):
+			writeJSON(w, http.StatusOK, map[string]any{"code": 7, "msg": "db error"})
 		default:
 			writeJSON(w, http.StatusOK, map[string]any{"code": 2, "msg": "db error"})
 		}
@@ -572,7 +577,7 @@ func (s *Server) handleUserSaveShare(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if latestID == 0 {
-			writeJSON(w, http.StatusOK, map[string]any{"code": 4, "msg": "该存档不存在!"})
+			writeJSON(w, http.StatusOK, map[string]any{"code": 4, "msg": "\u8be5\u5b58\u6863\u4e0d\u5b58\u5728!"})
 			return
 		}
 		idVal = latestID
@@ -594,6 +599,10 @@ func (s *Server) handleUserSaveShare(w http.ResponseWriter, r *http.Request) {
 
 	taskID, _, err := s.userSave.StartShare(uid, uint32(ridVal), idVal, sidVal, token, params)
 	if err != nil {
+		if usersave.IsTaskAlreadyPending(err) {
+			writeJSON(w, http.StatusOK, map[string]any{"code": 3, "msg": "\u8be5\u5b58\u6863\u5df2\u7ecf\u63d0\u4ea4\u5171\u4eab"})
+			return
+		}
 		writeJSON(w, http.StatusOK, map[string]any{"code": 2, "msg": "error"})
 		return
 	}
